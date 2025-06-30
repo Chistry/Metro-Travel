@@ -1,7 +1,9 @@
 from data_loader import cargar_visas, cargar_tarifas
 from pathfinder import construir_grafo, encontrar_ruta_mas_barata
+import tkinter as tk
+from tkinter import messagebox
 
-def iniciar_consulta():
+def iniciar_consulta(origen, destino, tiene_visa, resultado_label):
     """
     Orquesta la aplicación: saluda, pide datos, procesa y muestra resultados.
     """
@@ -15,19 +17,18 @@ def iniciar_consulta():
 
     # 2. Interactuar con el usuario (esto después lo cambian apra agregarle el UI de usuario)
     # ORIGEN
-    origen = input("Ingrese el código del aeropuerto de ORIGEN: ").upper()
+    origen = origen.get().upper()
     if origen not in todos_aeropuertos:
-        print(f"Error: El aeropuerto de origen '{origen}' no es válido.")
+        messagebox.showerror("Error", f"El aeropuerto de origen '{origen}' no es válido.")
         return
 
     # DESTINO
-    destino_final = input("Ingrese el código del aeropuerto de DESTINO: ").upper()
+    destino_final = destino.get().upper()
     if destino_final not in todos_aeropuertos:
-        print(f"Error: El aeropuerto de destino '{destino_final}' no es válido.")
+        messagebox.showerror("Error", f"El aeropuerto de destino '{destino_final}' no es válido.")
         return
 
-    respuesta_visa = input("¿El pasajero tiene visa? (si/no): ").lower()
-    tiene_visa = (respuesta_visa == 'si')
+    tiene_visa = tiene_visa.get()
 
     print("-" * 60)
 
@@ -41,13 +42,10 @@ def iniciar_consulta():
 
     # Verificar si el origen o el destino requieren visa y el pasajero no la tiene
     if origen not in aeropuertos_permitidos:
-        print(f"Lo sentimos, no se puede calcular la ruta.")
-        print(f"El aeropuerto de origen '{origen}' requiere visa y el pasajero no la posee.")
+        resultado_label.config(text=f"El aeropuerto de origen '{origen}' requiere visa y el pasajero no la posee.")
         return
-
     if destino_final not in aeropuertos_permitidos:
-        print(f"Lo sentimos, no se puede calcular la ruta.")
-        print(f"El aeropuerto de destino '{destino_final}' requiere visa y el pasajero no la posee.")
+        resultado_label.config(text=f"El aeropuerto de destino '{destino_final}' requiere visa y el pasajero no la posee.")
         return
 
 
@@ -57,12 +55,36 @@ def iniciar_consulta():
 
     # 4. Presentar resultados
     if costo != float('inf'):
-        print("🎉 ¡Ruta más económica encontrada! 🎉")
-        print(f"Ruta: {' -> '.join(ruta)}")
-        print(f"Costo Total: ${costo:,.2f}")
-        print(f"Número de vuelos/escalas: {len(ruta) - 1}")
+        resultado = f"🎉 ¡Ruta más económica encontrada! 🎉\nRuta: {' -> '.join(ruta)}\nCosto Total: ${costo:,.2f}\nNúmero de vuelos/escalas: {len(ruta) - 1}"
     else:
-        print(f"Lo sentimos, no se encontró una ruta posible desde {origen} hacia {destino_final} con los criterios dados.")
+        resultado = f"No se encontró una ruta posible desde {origen} hacia {destino_final}."
+    resultado_label.config(text=resultado)
+
+def iniciar_gui():
+    root = tk.Tk()
+    root.title("Metro Travel - Consulta de Vuelos")
+    
+    tk.Label(root, text="Aeropuerto ORIGEN:").grid(row=0, column=0, padx=5, pady=5)
+    origen_entry = tk.Entry(root)
+    origen_entry.grid(row=0, column=1, padx=5, pady=5)
+
+    tk.Label(root, text="Aeropuerto DESTINO:").grid(row=1, column=0, padx=5, pady=5)
+    destino_entry = tk.Entry(root)
+    destino_entry.grid(row=1, column=1, padx=5, pady=5)
+
+    tiene_visa = tk.BooleanVar()
+    tk.Checkbutton(root, text="¿Tiene visa?", variable=tiene_visa).grid(row=2, columnspan=2, pady=5)
+
+    resultado_label = tk.Label(root, text="", fg="blue", wraplength=400, justify="left")
+    resultado_label.grid(row=4, columnspan=2, padx=5, pady=10)
+
+    consultar_btn = tk.Button(
+        root, text="Consultar Ruta",
+        command=lambda: iniciar_consulta(origen_entry, destino_entry, tiene_visa, resultado_label)
+    )
+    consultar_btn.grid(row=3, columnspan=2, pady=5)
+
+    root.mainloop()
 
 if __name__ == "__main__":
-    iniciar_consulta()
+    iniciar_gui()
