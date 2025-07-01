@@ -1,4 +1,4 @@
-import heapq
+from custom_priority_queue import CustomPriorityQueue # Importamos nuestra cola de prioridad personalizada
 
 # Construye una representación de grafo a partir de las tarifas
 def construir_grafo(tarifas, aeropuertos_permitidos):
@@ -10,26 +10,37 @@ def construir_grafo(tarifas, aeropuertos_permitidos):
     return grafo
 
 def encontrar_ruta_mas_barata(grafo, origen, destino):
-    cola_prioridad = [(0, 0, origen, [origen])]
+    cola_prioridad = CustomPriorityQueue() 
+    
     distancias = {nodo: (float('inf'), float('inf')) for nodo in grafo}
     distancias[origen] = (0, 0)
-    
-    while cola_prioridad:
-        costo_actual, escalas_actuales, nodo_actual, ruta_actual = heapq.heappop(cola_prioridad)
+    predecesores = {nodo: None for nodo in grafo}
+
+    # Añadimos el nodo de origen a la cola de prioridad
+    cola_prioridad.push((0, 0, origen, [origen])) 
+
+    while not cola_prioridad.is_empty(): 
+        costo_actual, escalas_actuales, nodo_actual, ruta_actual = cola_prioridad.pop() 
+
+        # si ya hemos encontrado una ruta mejor a este nodo, lo ignoramos
+        if (costo_actual, escalas_actuales) > distancias[nodo_actual]: 
+            continue 
         
-        if (costo_actual, escalas_actuales) > distancias[nodo_actual]:
-            continue
-        
-        if nodo_actual == destino:
-            return costo_actual, escalas_actuales, ruta_actual
+        # Si hemos llegado al destino, construimos la ruta y la devolvemos
+        if nodo_actual == destino: 
+            return costo_actual, escalas_actuales, ruta_actual 
             
-        for vecino, precio_vuelo in grafo.get(nodo_actual, []):
-            nuevo_costo = costo_actual + precio_vuelo
-            nuevas_escalas = escalas_actuales + 1
+        # Explorar vecinos del nodo_actual
+        for vecino, precio_vuelo in grafo.get(nodo_actual, []): 
+            nuevo_costo = costo_actual + precio_vuelo 
+            nuevas_escalas = escalas_actuales + 1 
             
-            if (nuevo_costo, nuevas_escalas) < distancias[vecino]:
-                distancias[vecino] = (nuevo_costo, nuevas_escalas)
-                nueva_ruta = ruta_actual + [vecino]
-                heapq.heappush(cola_prioridad, (nuevo_costo, nuevas_escalas, vecino, nueva_ruta))
+            # Si encontramos una ruta más corta o una ruta con menos escalas al mismo costo, actualizamos
+            if (nuevo_costo, nuevas_escalas) < distancias[vecino]: 
+                distancias[vecino] = (nuevo_costo, nuevas_escalas) 
+                predecesores[vecino] = nodo_actual 
+                nueva_ruta = ruta_actual + [vecino] 
+                cola_prioridad.push((nuevo_costo, nuevas_escalas, vecino, nueva_ruta)) 
                 
-    return float('inf'), 0, []
+    # si no se enccuetrra una ruta al destino
+    return float('inf'), 0, [] 

@@ -3,12 +3,12 @@ from pathfinder import construir_grafo, encontrar_ruta_mas_barata
 import tkinter as tk
 from tkinter import messagebox
 
+
+#Orquesta la aplicación: saluda, pide datos, procesa y muestra resultados.
 def iniciar_consulta(origen, destino, tiene_visa, resultado_label):
-    """
-    Orquesta la aplicación: saluda, pide datos, procesa y muestra resultados.
-    """
-    print("✈️  Bienvenido al sistema de consulta de vuelos de Metro Travel ✈️")
-    print("-" * 60)
+    
+    #print("✈️  Bienvenido al sistema de consulta de vuelos de Metro Travel ✈️")
+    #print("-" * 60)
 
     # 1. Cargar datos usando nuestro módulo
     visas = cargar_visas()
@@ -30,7 +30,7 @@ def iniciar_consulta(origen, destino, tiene_visa, resultado_label):
 
     tiene_visa = tiene_visa.get()
 
-    print("-" * 60)
+    #print("-" * 60)
 
     # 3. Aplicar la lógica de negocio y obtener resultados
 
