@@ -1,5 +1,6 @@
 from data_loader import cargar_visas, cargar_tarifas
 from pathfinder import construir_grafo, encontrar_ruta_mas_barata
+from bfs_pathfinder import encontrar_ruta_menos_escalas_bfs
 from graph_visualizer import GraphVisualizer
 from complete_graph_visualizer import CompleteGraphVisualizer
 import tkinter as tk
@@ -81,6 +82,73 @@ def iniciar_consulta(origen, destino, tiene_visa, resultado_label, root):
     # Guardar el grafo actual para poder visualizarlo
     root.grafo_actual = grafo
 
+def buscar_menos_escalas(origen, destino, tiene_visa, resultado_label, root):
+    """
+    Busca la ruta con menos escalas usando BFS (Breadth-First Search).
+    
+    BFS garantiza encontrar la ruta con el mínimo número de escalas,
+    ya que explora el grafo nivel por nivel.
+    """
+    # 1. Cargar datos
+    visas = cargar_visas()
+    tarifas = cargar_tarifas()
+    todos_aeropuertos = set(visas.keys())
+
+    # 2. Validar entrada
+    origen_str = origen.get().upper()
+    if origen_str not in todos_aeropuertos:
+        messagebox.showerror("Error", f"El aeropuerto de origen '{origen_str}' no es válido.")
+        return
+
+    destino_str = destino.get().upper()
+    if destino_str not in todos_aeropuertos:
+        messagebox.showerror("Error", f"El aeropuerto de destino '{destino_str}' no es válido.")
+        return
+
+    tiene_visa_bool = tiene_visa.get()
+
+    # 3. Determinar aeropuertos permitidos
+    if tiene_visa_bool:
+        aeropuertos_permitidos = todos_aeropuertos
+    else:
+        aeropuertos_permitidos = {a for a, req in visas.items() if not req}
+
+    # Verificar restricciones de visa
+    if origen_str not in aeropuertos_permitidos:
+        resultado_label.config(text=f"El aeropuerto de origen '{origen_str}' requiere visa y el pasajero no la posee.")
+        return
+    if destino_str not in aeropuertos_permitidos:
+        resultado_label.config(text=f"El aeropuerto de destino '{destino_str}' requiere visa y el pasajero no la posee.")
+        return
+
+    # 4. Construir grafo y buscar ruta con BFS
+    grafo = construir_grafo(tarifas, aeropuertos_permitidos)
+    costo, escalas, ruta = encontrar_ruta_menos_escalas_bfs(grafo, origen_str, destino_str)
+
+    # 5. Presentar resultados
+    if costo != float('inf'):
+        vuelos_totales = len(ruta) - 1
+        resultado = (
+            f"✈️ ¡Ruta con menos escalas encontrada! ✈️\n"
+            f"Ruta: {' -> '.join(ruta)}\n"
+            f"Costo Total: ${costo:,.2f}\n"
+            f"Vuelos totales: {vuelos_totales}\n"
+            f"Escalas: {escalas}\n"
+            f"(Optimizado para menos escalas usando BFS)"
+        )
+        
+        # Habilitar botón para ver grafo con ruta
+        visualizar_ruta_btn.config(
+            state="normal",
+            command=lambda: GraphVisualizer(root, grafo, ruta)
+        )
+    else:
+        resultado = f"No se encontró una ruta posible desde {origen_str} hacia {destino_str}."
+        visualizar_ruta_btn.config(state="disabled")
+        
+    resultado_label.config(text=resultado)
+    root.grafo_actual = grafo
+
 def visualizar_todas_las_rutas(root):
     """Muestra TODAS las rutas del archivo tarifas.json sin filtros"""
     CompleteGraphVisualizer(root)
@@ -110,29 +178,37 @@ def iniciar_gui():
     button_frame = tk.Frame(main_frame)
     button_frame.grid(row=3, columnspan=2, pady=10)
     
+    # Botones en dos filas
+    # Primera fila
     consultar_btn = tk.Button(
-        button_frame, text="Consultar Ruta",
+        button_frame, text="Ruta Más Económica",
         command=lambda: iniciar_consulta(origen_entry, destino_entry, tiene_visa, resultado_label, root),
-        bg="lightblue", font=("Arial", 10, "bold")
+        bg="lightblue", font=("Arial", 10, "bold"), width=18
     )
-    consultar_btn.pack(side=tk.LEFT, padx=5)
+    consultar_btn.grid(row=0, column=0, padx=5, pady=3)
     
-    # Botón global para visualizar ruta (inicialmente deshabilitado)
+    menos_escalas_btn = tk.Button(
+        button_frame, text="Ruta Menos Escalas",
+        command=lambda: buscar_menos_escalas(origen_entry, destino_entry, tiene_visa, resultado_label, root),
+        bg="lightgreen", font=("Arial", 10, "bold"), width=18
+    )
+    menos_escalas_btn.grid(row=0, column=1, padx=5, pady=3)
+    
+    # Segunda fila
     global visualizar_ruta_btn
     visualizar_ruta_btn = tk.Button(
         button_frame, text="Ver Grafo con Ruta",
         state="disabled",
-        bg="orange", font=("Arial", 10)
+        bg="orange", font=("Arial", 10), width=18
     )
-    visualizar_ruta_btn.pack(side=tk.LEFT, padx=5)
+    visualizar_ruta_btn.grid(row=1, column=0, padx=5, pady=3)
     
-    # Nuevo botón para ver TODAS las rutas
     visualizar_todas_btn = tk.Button(
         button_frame, text="Ver TODAS las Rutas",
         command=lambda: visualizar_todas_las_rutas(root),
-        bg="purple", fg="white", font=("Arial", 10, "bold")
+        bg="purple", fg="white", font=("Arial", 10, "bold"), width=18
     )
-    visualizar_todas_btn.pack(side=tk.LEFT, padx=5)
+    visualizar_todas_btn.grid(row=1, column=1, padx=5, pady=3)
 
     # Área de resultados
     resultado_frame = tk.LabelFrame(main_frame, text="Resultado", font=("Arial", 10, "bold"))
