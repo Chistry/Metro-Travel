@@ -1,6 +1,6 @@
 {
   "CCS": false,
-  "AUA": false,
+  "AUA": true,
   "BON": true,
   "CUR": true,
   "SXM": true,

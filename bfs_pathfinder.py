@@ -1,16 +1,12 @@
-from collections import deque
-from typing import Dict, List, Tuple, Optional, Set
-
-
 class BFSPathfinder:
     
-    def __init__(self, grafo: Dict[str, List[Tuple[str, float]]]):
+    def __init__(self, grafo: dict[str, list[tuple[str, float]]]):
         self.grafo = grafo
-        self.visitados: Set[str] = set()
-        self.padres: Dict[str, Optional[str]] = {}
-        self.costos: Dict[str, float] = {}
+        self.visitados: set[str] = set()
+        self.padres: dict[str, str | None] = {}
+        self.costos: dict[str, float] = {}
     
-    def encontrar_ruta_menos_escalas(self, origen: str, destino: str) -> Tuple[float, int, List[str]]:
+    def encontrar_ruta_menos_escalas(self, origen: str, destino: str) -> tuple[float, int, list[str]]:
         # Verificar que origen y destino existen en el grafo
         if origen not in self.grafo:
             return float('inf'), 0, []
@@ -23,8 +19,8 @@ class BFSPathfinder:
         self.costos.clear()
         
         # Cola para BFS: almacena tuplas (nodo_actual, costo_acumulado)
-        # Usamos deque para operaciones O(1) en append y popleft
-        cola: deque[Tuple[str, float]] = deque([(origen, 0)])
+        # Usamos una lista normal como cola
+        cola: list[tuple[str, float]] = [(origen, 0)]
         
         # Marcar origen como visitado
         self.visitados.add(origen)
@@ -37,7 +33,8 @@ class BFSPathfinder:
         # Algoritmo BFS principal
         while cola and not destino_encontrado:
             # Extraer el primer elemento de la cola (FIFO)
-            nodo_actual, costo_actual = cola.popleft()
+            # Nota: pop(0) es O(n), menos eficiente que deque.popleft() que es O(1)
+            nodo_actual, costo_actual = cola.pop(0)
             
             # Explorar todos los vecinos del nodo actual
             for vecino, precio_vuelo in self.grafo.get(nodo_actual, []):
@@ -77,7 +74,7 @@ class BFSPathfinder:
         
         return costo_total, num_escalas, ruta
     
-    def _reconstruir_ruta(self, origen: str, destino: str) -> List[str]:
+    def _reconstruir_ruta(self, origen: str, destino: str) -> list[str]:
         ruta = []
         nodo_actual = destino
         
@@ -91,7 +88,7 @@ class BFSPathfinder:
         
         return ruta
     
-    def obtener_estadisticas_ruta(self, ruta: List[str]) -> Dict[str, any]:
+    def obtener_estadisticas_ruta(self, ruta: list[str]) -> dict[str, any]:
         if len(ruta) < 2:
             return {
                 'valida': False,
@@ -124,8 +121,8 @@ class BFSPathfinder:
         }
 
 
-def encontrar_ruta_menos_escalas_bfs(grafo: Dict[str, List[Tuple[str, float]]], 
+def encontrar_ruta_menos_escalas_bfs(grafo: dict[str, list[tuple[str, float]]], 
                                     origen: str, 
-                                    destino: str) -> Tuple[float, int, List[str]]:
+                                    destino: str) -> tuple[float, int, list[str]]:
     bfs_finder = BFSPathfinder(grafo)
     return bfs_finder.encontrar_ruta_menos_escalas(origen, destino) 
