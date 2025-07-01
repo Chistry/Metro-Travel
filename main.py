@@ -55,7 +55,15 @@ def iniciar_consulta(origen, destino, tiene_visa, resultado_label):
 
     # 4. Presentar resultados
     if costo != float('inf'):
-        resultado = f"🎉 ¡Ruta más económica encontrada! 🎉\nRuta: {' -> '.join(ruta)}\nCosto Total: ${costo:,.2f}\nNúmero de vuelos/escalas: {len(ruta) - 1}"
+        vuelos_totales = len(ruta) - 1
+        escalas = max(0, len(ruta) - 2)
+        resultado = (
+            f"🎉 ¡Ruta más económica encontrada! 🎉\n"
+            f"Ruta: {' -> '.join(ruta)}\n"
+            f"Costo Total: ${costo:,.2f}\n"
+            f"Vuelos totales: {vuelos_totales}\n"
+            f"Escalas: {escalas}"
+        )
     else:
         resultado = f"No se encontró una ruta posible desde {origen} hacia {destino_final}."
     resultado_label.config(text=resultado)
